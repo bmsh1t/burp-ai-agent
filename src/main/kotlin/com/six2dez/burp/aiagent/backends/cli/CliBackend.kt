@@ -291,6 +291,23 @@ class CliBackend(
             if (!args.contains("-p") && !args.contains("--prompt")) {
                 args.add("-p")
             }
+            val currentSessionId = _cliSessionId.get()
+            if (currentSessionId != null) {
+                // Follow-up message: resume existing conversation
+                args.add("-r")
+                args.add(currentSessionId)
+            } else {
+                // First message: generate a new session id (atomic CAS to avoid races)
+                val newId = java.util.UUID.randomUUID().toString()
+                if (_cliSessionId.compareAndSet(null, newId)) {
+                    // iFlow uses session file, store the ID for later resume
+                    // No session-id flag needed for first message
+                } else {
+                    // Another thread won the race — resume their session
+                    args.add("-r")
+                    args.add(_cliSessionId.get()!!)
+                }
+            }
             return args
         }
 

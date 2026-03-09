@@ -287,16 +287,20 @@ class CliBackend(
             val extras = cmd.drop(1)
             val args = mutableListOf<String>()
             args.add(base)
+            // -c must come before -p
+            val currentSessionFile = _cliSessionId.get()
+            if (currentSessionFile != null) {
+                args.add("-c")
+            }
             args.addAll(extras)
             if (!args.contains("-p") && !args.contains("--prompt")) {
                 args.add("-p")
             }
-            val currentSessionFile = _cliSessionId.get()
-            if (currentSessionFile != null) {
-                // Follow-up message: continue recent conversation
-                args.add("-c")
-            }
             // First message: no session flag needed, iFlow auto-creates session
+            // Set session marker after first successful call
+            if (currentSessionFile == null) {
+                _cliSessionId.set("active")
+            }
             return args
         }
 

@@ -592,6 +592,7 @@ class MainTab(
             }
             "claude-cli" -> if (settings.claudeCmd.isBlank()) "Claude command is empty." else null
             "copilot-cli" -> if (settings.copilotCmd.isBlank()) "Copilot command is empty." else null
+            "iflowcli" -> if (settings.iflowcliCmd.isBlank()) "iFlow CLI command is empty." else null
             "ollama" -> if (settings.ollamaCliCmd.isBlank()) "Ollama CLI command is empty." else null
             "lmstudio" -> if (settings.lmStudioUrl.isBlank()) "LM Studio URL is empty." else null
             "openai-compatible" -> {

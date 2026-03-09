@@ -48,6 +48,7 @@ data class AgentSettings(
     val openAiCompatibleHeaders: String,
     val openAiCompatibleTimeoutSeconds: Int,
     val copilotCmd: String = "",
+    val iflowcliCmd: String = "",
     val requestPromptTemplate: String,
     val issuePromptTemplate: String,
     val issueAnalyzePrompt: String,
@@ -149,6 +150,7 @@ class AgentSettingsRepository(api: MontoyaApi) {
             openAiCompatibleTimeoutSeconds = (prefs.getInteger(KEY_OPENAI_COMPAT_TIMEOUT) ?: defaultOpenAiCompatTimeoutSeconds())
                 .coerceIn(30, 3600),
             copilotCmd = prefs.getString(KEY_COPILOT_CMD).orEmpty().trim().ifBlank { defaultCopilotCmd() },
+            iflowcliCmd = prefs.getString(KEY_IFLOWCLI_CMD).orEmpty().trim().ifBlank { defaultIflowcliCmd() },
             requestPromptTemplate = prefs.getString(KEY_PROMPT_FIND_VULNS).orEmpty().ifBlank { defaultRequestPrompt() },
             issuePromptTemplate = prefs.getString(KEY_PROMPT_FULL_REPORT).orEmpty().ifBlank { defaultIssuePrompt() },
             issueAnalyzePrompt = prefs.getString(KEY_PROMPT_ISSUE_ANALYZE).orEmpty().ifBlank { defaultIssueAnalyzePrompt() },
@@ -240,6 +242,7 @@ class AgentSettingsRepository(api: MontoyaApi) {
             openAiCompatibleHeaders = "",
             openAiCompatibleTimeoutSeconds = defaultOpenAiCompatTimeoutSeconds(),
             copilotCmd = defaultCopilotCmd(),
+            iflowcliCmd = defaultIflowcliCmd(),
             requestPromptTemplate = defaultRequestPrompt(),
             issuePromptTemplate = defaultIssuePrompt(),
             issueAnalyzePrompt = defaultIssueAnalyzePrompt(),
@@ -324,6 +327,7 @@ class AgentSettingsRepository(api: MontoyaApi) {
         prefs.setString(KEY_OPENAI_COMPAT_HEADERS, settings.openAiCompatibleHeaders)
         prefs.setInteger(KEY_OPENAI_COMPAT_TIMEOUT, settings.openAiCompatibleTimeoutSeconds.coerceIn(30, 3600))
         prefs.setString(KEY_COPILOT_CMD, settings.copilotCmd)
+        prefs.setString(KEY_IFLOWCLI_CMD, settings.iflowcliCmd)
         prefs.setString(KEY_PROMPT_FIND_VULNS, settings.requestPromptTemplate)
         prefs.setString(KEY_PROMPT_FULL_REPORT, settings.issuePromptTemplate)
         prefs.setString(KEY_PROMPT_ISSUE_ANALYZE, settings.issueAnalyzePrompt)
@@ -473,6 +477,7 @@ class AgentSettingsRepository(api: MontoyaApi) {
         private const val KEY_OPENAI_COMPAT_HEADERS = "openai.compat.headers"
         private const val KEY_OPENAI_COMPAT_TIMEOUT = "openai.compat.timeoutSeconds"
         private const val KEY_COPILOT_CMD = "copilot.cmd"
+        private const val KEY_IFLOWCLI_CMD = "iflowcli.cmd"
         private const val KEY_PROMPT_FIND_VULNS = "prompt.find_vulns"
         private const val KEY_PROMPT_QUICK_RECON = "prompt.quick_recon"
         private const val KEY_PROMPT_EXPLAIN_JS = "prompt.explain_js"
@@ -612,6 +617,10 @@ class AgentSettingsRepository(api: MontoyaApi) {
 
         private fun defaultCopilotCmd(): String {
             return "copilot"
+        }
+
+        private fun defaultIflowcliCmd(): String {
+            return "iflow"
         }
 
         private fun defaultBountyPromptDir(): String {

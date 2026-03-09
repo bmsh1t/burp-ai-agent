@@ -44,6 +44,7 @@ class CliBackend(
             "codex-cli" -> settings.codexCmd
             "opencode-cli" -> settings.opencodeCmd
             "copilot-cli" -> settings.copilotCmd
+            "iflowcli" -> settings.iflowcliCmd
             "ollama" -> settings.ollamaCliCmd
             else -> ""
         }

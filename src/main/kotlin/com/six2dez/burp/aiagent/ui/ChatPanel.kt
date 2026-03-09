@@ -26,6 +26,7 @@ import java.awt.Graphics
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.net.URI
+import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.serialization.json.Json
@@ -1112,16 +1113,16 @@ class ChatPanel(
             }
             prefs.setString(SESSIONS_KEY, sessionList.joinToString("\n"))
 
-            // Save messages for each session
+            // Save messages for each session (base64 encoded to avoid XML invalid chars)
             for (s in sessionsById.values) {
-                val msgData = s.messages.joinToString("\u001F") { msg ->
-                    "${msg.role}\u001E${msg.content.replace("\n", "\u001D")}"
+                val msgData = s.messages.joinToString("\n") { msg ->
+                    "${msg.role}:${Base64.getEncoder().encodeToString(msg.content.toByteArray(Charsets.UTF_8))}"
                 }
                 prefs.setString(SESSION_MSG_KEY_PREFIX + s.id, msgData)
             }
             val draftsData = sessionsById.keys.map { id ->
-                val draft = sessionDrafts[id].orEmpty().replace("\n", "\u001D")
-                "$id\u001E$draft"
+                val draft = Base64.getEncoder().encodeToString(sessionDrafts[id].orEmpty().toByteArray(Charsets.UTF_8))
+                "$id:$draft"
             }
             prefs.setString(SESSION_DRAFTS_KEY, draftsData.joinToString("\n"))
 
@@ -1166,18 +1167,23 @@ class ChatPanel(
                 val messages = mutableListOf<ChatMessage>()
                 val msgRaw = prefs.getString(SESSION_MSG_KEY_PREFIX + id)
                 if (!msgRaw.isNullOrBlank()) {
-                    for (msgEntry in msgRaw.split("\u001F")) {
-                        val msgParts = msgEntry.split("\u001E", limit = 2)
-                        if (msgParts.size == 2) {
-                            val role = msgParts[0]
-                            var text = msgParts[1].replace("\u001D", "\n")
-                            // Clean up noise from old persisted messages
-                            text = text.lines()
+                    for (msgEntry in msgRaw.split("\n")) {
+                        val colonIdx = msgEntry.indexOf(':')
+                        if (colonIdx > 0) {
+                            val role = msgEntry.substring(0, colonIdx)
+                            val payload = msgEntry.substring(colonIdx + 1)
+                            val text = try {
+                                String(Base64.getDecoder().decode(payload), Charsets.UTF_8)
+                            } catch (_: IllegalArgumentException) {
+                                // Legacy format fallback
+                                payload.replace("\u001D", "\n")
+                            }
+                            val cleaned = text.lines()
                                 .filterNot { it.lowercase().startsWith("hook registry initialized") }
                                 .joinToString("\n")
                                 .trim()
-                            if (text.isNotBlank()) {
-                                messages.add(ChatMessage(role, text))
+                            if (cleaned.isNotBlank()) {
+                                messages.add(ChatMessage(role, cleaned))
                             }
                         }
                     }
@@ -1214,11 +1220,18 @@ class ChatPanel(
                 draftsRaw.split('\n')
                     .filter { it.isNotBlank() }
                     .forEach { entry ->
-                        val parts = entry.split("\u001E", limit = 2)
-                        if (parts.size != 2) return@forEach
-                        val id = parts[0]
-                        if (!sessionsById.containsKey(id)) return@forEach
-                        sessionDrafts[id] = parts[1].replace("\u001D", "\n")
+                        val colonIdx = entry.indexOf(':')
+                        if (colonIdx > 0) {
+                            val id = entry.substring(0, colonIdx)
+                            if (!sessionsById.containsKey(id)) return@forEach
+                            val payload = entry.substring(colonIdx + 1)
+                            sessionDrafts[id] = try {
+                                String(Base64.getDecoder().decode(payload), Charsets.UTF_8)
+                            } catch (_: IllegalArgumentException) {
+                                // Legacy format fallback
+                                payload.replace("\u001D", "\n")
+                            }
+                        }
                     }
             }
 

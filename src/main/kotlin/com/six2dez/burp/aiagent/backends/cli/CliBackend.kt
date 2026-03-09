@@ -274,8 +274,24 @@ class CliBackend(
                     val cmd = buildCopilotCommand(baseCommand)
                     cmd to prompt
                 }
+                "iflowcli" -> {
+                    val cmd = buildIflowcliCommand(baseCommand)
+                    cmd to prompt
+                }
                 else -> baseCommand to prompt
             }
+        }
+
+        private fun buildIflowcliCommand(cmd: List<String>): List<String> {
+            val base = cmd.firstOrNull() ?: "iflow"
+            val extras = cmd.drop(1)
+            val args = mutableListOf<String>()
+            args.add(base)
+            args.addAll(extras)
+            if (!args.contains("-p") && !args.contains("--prompt")) {
+                args.add("-p")
+            }
+            return args
         }
 
         private fun buildCodexExecCommand(cmd: List<String>, outputFile: java.io.File?): List<String> {

@@ -502,7 +502,8 @@ class CliBackend(
                 RegexOption.DOT_MATCHES_ALL
             )
             cleaned = execInfoRegex.replace(cleaned, "")
-            // Also clean up any remaining JSON lines that might have been            return cleaned.lineSequence()
+            // Also clean up any remaining JSON lines
+            return cleaned.lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotBlank() && !inputLines.contains(it) }
                 .filterNot { isIflowcliNoiseLine(it) }

@@ -494,11 +494,15 @@ class CliBackend(
 
         private fun readIflowcliOutput(stdout: String, prompt: String): String {
             val inputLines = prompt.lines().map { it.trim() }.filter { it.isNotBlank() }.toSet()
-            // Remove Execution Info block (XML tag + JSON content)
+            // Remove Execution Info block using regex
             var cleaned = stdout
-            val execInfoRegex = Regex("<Execution Info>\\s*\\{.*?}\\s*</Execution Info>", RegexOption.DOT_MATCHES_ALL)
+            // Match <Execution Info> followed by JSON content until </Execution Info>
+            val execInfoRegex = Regex(
+                "<Execution Info>\\s*\\{[\\s\\S]*?\\s*\\}\\s*</Execution Info>",
+                RegexOption.DOT_MATCHES_ALL
+            )
             cleaned = execInfoRegex.replace(cleaned, "")
-            return cleaned.lineSequence()
+            // Also clean up any remaining JSON lines that might have been            return cleaned.lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotBlank() && !inputLines.contains(it) }
                 .filterNot { isIflowcliNoiseLine(it) }

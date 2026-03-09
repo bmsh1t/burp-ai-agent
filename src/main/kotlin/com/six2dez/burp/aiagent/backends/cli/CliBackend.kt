@@ -224,6 +224,7 @@ class CliBackend(
                         "opencode-cli" -> readOpenCodeOutput(stdoutText, text)
                         "claude-cli" -> readClaudeOutput(stdoutText, text)
                         "copilot-cli" -> readCopilotOutput(stdoutText, text)
+                        "iflowcli" -> readIflowcliOutput(stdoutText, text)
                         else -> stdoutText.trim()
                     }
                     if (finalMessage.isNotBlank()) onChunk(finalMessage)
@@ -463,6 +464,31 @@ class CliBackend(
                 .filter { it.isNotBlank() && !inputLines.contains(it) }
                 .joinToString("\n")
                 .trim()
+        }
+
+        private fun readIflowcliOutput(stdout: String, prompt: String): String {
+            val inputLines = prompt.lines().map { it.trim() }.filter { it.isNotBlank() }.toSet()
+            return stdout.lineSequence()
+                .map { it.trim() }
+                .filter { it.isNotBlank() && !inputLines.contains(it) }
+                .filterNot { isIflowcliNoiseLine(it) }
+                .joinToString("\n")
+                .trim()
+        }
+
+        private fun isIflowcliNoiseLine(line: String): Boolean {
+            return line.startsWith("<Execution Info>") ||
+                line.startsWith("\"session-id\":") ||
+                line.startsWith("\"conversation-id\":") ||
+                line.startsWith("\"assistantRounds\":") ||
+                line.startsWith("\"executionTimeMs\":") ||
+                line.startsWith("\"tokenUsage\":") ||
+                line.startsWith("\"input\":") ||
+                line.startsWith("\"output\":") ||
+                line.startsWith("\"total\":") ||
+                line == "{" ||
+                line == "}" ||
+                line == "</Execution Info>"
         }
     }
 

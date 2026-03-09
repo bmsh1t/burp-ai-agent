@@ -521,21 +521,6 @@ class CliBackend(
                 trimmed.startsWith("\"output\"") ||
                 trimmed.startsWith("\"total\"")
         }
-
-        private fun isIflowcliNoiseLine(line: String): Boolean {
-            return line.startsWith("<Execution Info>") ||
-                line.startsWith("\"session-id\":") ||
-                line.startsWith("\"conversation-id\":") ||
-                line.startsWith("\"assistantRounds\":") ||
-                line.startsWith("\"executionTimeMs\":") ||
-                line.startsWith("\"tokenUsage\":") ||
-                line.startsWith("\"input\":") ||
-                line.startsWith("\"output\":") ||
-                line.startsWith("\"total\":") ||
-                line == "{" ||
-                line == "}" ||
-                line == "</Execution Info>"
-        }
     }
 
     private class CliConnection(

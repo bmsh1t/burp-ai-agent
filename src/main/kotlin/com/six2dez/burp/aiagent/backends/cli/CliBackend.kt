@@ -494,12 +494,32 @@ class CliBackend(
 
         private fun readIflowcliOutput(stdout: String, prompt: String): String {
             val inputLines = prompt.lines().map { it.trim() }.filter { it.isNotBlank() }.toSet()
-            return stdout.lineSequence()
+            // Remove Execution Info block (XML tag + JSON content)
+            var cleaned = stdout
+            val execInfoRegex = Regex("<Execution Info>\\s*\\{.*?}\\s*</Execution Info>", RegexOption.DOT_MATCHES_ALL)
+            cleaned = execInfoRegex.replace(cleaned, "")
+            return cleaned.lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotBlank() && !inputLines.contains(it) }
                 .filterNot { isIflowcliNoiseLine(it) }
                 .joinToString("\n")
                 .trim()
+        }
+
+        private fun isIflowcliNoiseLine(line: String): Boolean {
+            val trimmed = line.trim()
+            return trimmed.startsWith("<Execution Info>") ||
+                trimmed.startsWith("</Execution Info>") ||
+                trimmed == "{" ||
+                trimmed == "}" ||
+                trimmed.startsWith("\"session-id\"") ||
+                trimmed.startsWith("\"conversation-id\"") ||
+                trimmed.startsWith("\"assistantRounds\"") ||
+                trimmed.startsWith("\"executionTimeMs\"") ||
+                trimmed.startsWith("\"tokenUsage\"") ||
+                trimmed.startsWith("\"input\"") ||
+                trimmed.startsWith("\"output\"") ||
+                trimmed.startsWith("\"total\"")
         }
 
         private fun isIflowcliNoiseLine(line: String): Boolean {
